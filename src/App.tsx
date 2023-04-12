@@ -2,22 +2,35 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getAllData } from './reducers/yourReducer';
 import { useData } from './dataSelector';
+import { AppDispatch } from './store';
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface Edge {
+  a: Point;
+  b: Point;
+}
+
 
 const canvasWidth = 400;
 const canvasHeight = 400;
 
 
 function App() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const data = useData();
   console.log("data", data);
 
-  const[points, setPoints] = useState([]);
-  const [edges, setEdges] = useState([]);
-  const canvasRef = useRef(null);
+  const [points, setPoints] = useState<Point[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   
-  const handleClick = (event) => {
+  const handleClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
@@ -25,7 +38,7 @@ function App() {
   };
 
 
-  const drawPoint = (context, x, y) => {
+  const drawPoint = (context: CanvasRenderingContext2D, x: number, y: number) => {
     console.log("--------------------");
     console.log('drawPoint', x, y);
     const paddingLeft = 10;
@@ -53,7 +66,13 @@ function App() {
      context.fillText(label, canvasX - 8, canvasY + 15);
   }
 
-  const drawLine = (context, x1, y1, x2, y2) => {
+  const drawLine = (
+    context: CanvasRenderingContext2D, 
+    x1: number, 
+    y1: number, 
+    x2: number, 
+    y2: number
+  ) => {
     context.beginPath();
     context.moveTo(x1, y1);
     context.lineTo(x2, y2);
@@ -64,25 +83,19 @@ function App() {
 
   useEffect(() => {
     async function getData() {
-      // if (!data.length) {
-        await dispatch(getAllData());
-      // }
+      try {
+        dispatch(getAllData());
+      } catch (error) {
+        console.error('Failed to fetch data: ', error);
+      }
     }
     void getData();
   }, [data.length]);
 
-  // useEffect(() => {
-  //   const generateEdges = () => {
-  //     const newEdges = [];
-
-  //     setEdges(newEdges);
-  //   };
-
-  //   generateEdges();
-  // }, []);
-
   useEffect(() => {
+    if (!canvasRef.current) return;
     const context = canvasRef.current.getContext('2d');
+    if (!context) return;
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
     const paddingLeft = 10;
