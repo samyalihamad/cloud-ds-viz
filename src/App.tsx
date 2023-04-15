@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getAllData } from './reducers/yourReducer';
-import { useData } from './dataSelector';
+import { useGMapsResponse } from './dataSelector';
 import { AppDispatch } from './store';
 
 interface Point {
@@ -21,11 +21,10 @@ const canvasHeight = 400;
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
-  const data = useData();
-  console.log("data", data);
+  const gMapsResponse = useGMapsResponse();
+  console.log("data", gMapsResponse);
 
   const [points, setPoints] = useState<Point[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   
@@ -71,12 +70,13 @@ function App() {
     x1: number, 
     y1: number, 
     x2: number, 
-    y2: number
+    y2: number,
+    strokeStyle: string = 'black',
   ) => {
     context.beginPath();
     context.moveTo(x1, y1);
     context.lineTo(x2, y2);
-    context.strokeStyle = 'black';
+    context.strokeStyle = strokeStyle;
     context.lineWidth = 1;
     context.stroke();
   }
@@ -90,7 +90,7 @@ function App() {
       }
     }
     void getData();
-  }, [data.length]);
+  }, []);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -100,29 +100,32 @@ function App() {
 
     const paddingLeft = 10;
     const paddingTop = 10;
-    console.log("data", data);
-    console.log("data.length", data.length);
-    if(data.length > 0) {
-      data.forEach((edge) => {
-        console.log("edge", edge);
-        
-        drawPoint(context, edge.a.x, edge.a.y);
-        drawPoint(context, edge.b.x, edge.b.y);
-  
+    
+    gMapsResponse.vicinityPaths.forEach((vector) => {
+
+      drawPoint(context, vector.a.x, vector.a.y);
+      drawPoint(context, vector.b.x, vector.b.y);
+
+      const srcX = vector.a.x * 20 + paddingLeft;
+      const srcY = canvasHeight - (vector.a.y * 20 + paddingTop);
+      const destX = vector.b.x * 20 + paddingLeft;
+      const destY = canvasHeight - (vector.b.y * 20 + paddingTop);
+
+      drawLine(context, srcX, srcY, destX, destY);
+    });
+
+    if(gMapsResponse.shortestPaths.length > 0) {
+      gMapsResponse.shortestPaths.forEach((edge) => {
         const srcX = edge.a.x * 20 + paddingLeft;
         const srcY = canvasHeight - (edge.a.y * 20 + paddingTop);
         const destX = edge.b.x * 20 + paddingLeft;
         const destY = canvasHeight - (edge.b.y * 20 + paddingTop);
   
-        drawLine(context, srcX, srcY, destX, destY);
+        drawLine(context, srcX, srcY, destX, destY, 'red');
       });
     }
     
-  }, [data.length]);
-
-  useEffect(() => {
-    
-  }, [edges]);
+  }, [gMapsResponse]);
 
   return (
     <div>
