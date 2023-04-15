@@ -20,7 +20,7 @@ const initialState: YourState = {
 export const getAllData = createAsyncThunk<gMapsResponse>(
   '/data',
   async () => {
-    const apiKey = 'RDKXp3OOfC80vIf1PD52ZUWQ7o0Y9cO8IYnBNwjc';
+    const apiKey = process.env.REACT_APP_API_KEY;
 
     const config = {
       headers: {
