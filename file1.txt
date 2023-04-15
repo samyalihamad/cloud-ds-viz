@@ -1,3 +1,0 @@
-file1
-updated
-Adding a new line 
